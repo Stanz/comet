@@ -67,43 +67,26 @@ def _apply_private_no_cache(response):
     response.headers["Vary"] = "Cookie, Accept, Accept-Encoding"
 
 
-def _render_configure_login(request: Request, next_url: str, error: str = ""):
-    response = templates.TemplateResponse(
-        "admin_login.html",
-        {
-            "request": request,
-            "error": error,
-            "form_action": "/configure/login",
-            "password_label": "Configure Password",
-            "password_placeholder": "Enter configure password",
-            "next_url": _sanitize_next_url(next_url),
-        },
-    )
-    _apply_private_no_cache(response)
-    return response
-
+from fastapi.responses import JSONResponse
 
 @router.post(
-    "/configure/login",
+    "/api/configure/login",
     tags=["Configuration"],
     summary="Configuration Login",
     description="Authenticates and unlocks the configuration page.",
 )
-async def configure_login(
+async def api_configure_login(
     request: Request,
     password: str = Form(..., description="Configuration page password"),
-    next_url: str = Form("/configure", alias="next"),
 ):
     if not CONFIGURE_PAGE_PASSWORD_ENABLED:
-        return RedirectResponse(_sanitize_next_url(next_url), status_code=303)
+        return JSONResponse({"success": True})
 
     is_correct = secrets.compare_digest(password, CONFIGURE_PAGE_PASSWORD)
     if not is_correct:
-        return _render_configure_login(
-            request, next_url=_sanitize_next_url(next_url), error="Invalid password"
-        )
+        return JSONResponse({"success": False, "error": "Invalid password"}, status_code=401)
 
-    response = RedirectResponse(_sanitize_next_url(next_url), status_code=303)
+    response = JSONResponse({"success": True})
     response.set_cookie(
         key=CONFIGURE_SESSION_COOKIE,
         value=_encode_configure_session(),
@@ -117,36 +100,27 @@ async def configure_login(
 
 
 @router.get(
-    "/configure",
+    "/api/ui-config",
     tags=["Configuration"],
-    summary="Configuration Page",
-    description="Renders the configuration page.",
+    summary="UI Configuration",
+    description="Returns the UI configuration parameters safely.",
 )
-@router.get(
-    "/{b64config}/configure",
-    tags=["Configuration"],
-    summary="Configuration Page",
-    description="Renders the configuration page with existing configuration.",
-)
-async def configure(
+async def api_ui_config(
     request: Request,
-    b64config: str | None = None,
     configure_session: str | None = Cookie(
         None, description="Configuration page session token"
     ),
 ):
-    if b64config is not None and not config_check(b64config, strict_b64config=True):
-        return RedirectResponse("/configure", status_code=303)
-
     if CONFIGURE_PAGE_PASSWORD_ENABLED and not _verify_configure_session(
         configure_session
     ):
-        return _render_configure_login(request, next_url=_next_url(request))
+        return JSONResponse(
+            {"success": False, "error": "Authentication required"}, status_code=401
+        )
 
-    response = templates.TemplateResponse(
-        "index.html",
+    response = JSONResponse(
         {
-            "request": request,
+            "success": True,
             "CUSTOM_HEADER_HTML": settings.CUSTOM_HEADER_HTML
             if settings.CUSTOM_HEADER_HTML
             else "",
@@ -154,7 +128,8 @@ async def configure(
             "proxyDebridStream": settings.PROXY_DEBRID_STREAM,
             "disableTorrentStreams": settings.DISABLE_TORRENT_STREAMS,
             "stremioApiPrefix": settings.STREMIO_API_PREFIX,
-        },
+            "passwordEnabled": CONFIGURE_PAGE_PASSWORD_ENABLED,
+        }
     )
 
     if CONFIGURE_PAGE_PASSWORD_ENABLED:
@@ -164,3 +139,4 @@ async def configure(
         response.headers["Vary"] = "Accept, Accept-Encoding"
 
     return response
+

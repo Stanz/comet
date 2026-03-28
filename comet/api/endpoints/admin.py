@@ -64,23 +64,8 @@ def require_admin_auth(
         raise HTTPException(status_code=401, detail="Authentication required")
 
 
-@router.get(
-    "/admin",
-    tags=["Admin"],
-    summary="Admin Login Page",
-    description="Renders the admin login page.",
-)
-async def admin_root(
-    request: Request,
-    admin_session: str = Cookie(None, description="Admin session token"),
-):
-    if verify_admin_session(admin_session):
-        return RedirectResponse("/admin/dashboard")
-    return templates.TemplateResponse("admin_login.html", {"request": request})
-
-
 @router.post(
-    "/admin/login",
+    "/admin/api/login",
     tags=["Admin"],
     summary="Admin Login",
     description="Authenticates the admin user.",
@@ -91,12 +76,10 @@ async def admin_login(
     is_correct = secrets.compare_digest(password, settings.ADMIN_DASHBOARD_PASSWORD)
 
     if not is_correct:
-        return templates.TemplateResponse(
-            "admin_login.html", {"request": request, "error": "Invalid password"}
-        )
+        return JSONResponse({"success": False, "error": "Invalid password"}, status_code=401)
 
     session_token = create_admin_session()
-    response = RedirectResponse("/admin/dashboard", status_code=303)
+    response = JSONResponse({"success": True})
     response.set_cookie(
         key=ADMIN_SESSION_COOKIE,
         value=session_token,
@@ -122,42 +105,36 @@ async def update_check(
 
 
 @router.get(
-    "/admin/dashboard",
+    "/admin/api/config",
     tags=["Admin"],
-    summary="Admin Dashboard",
-    description="Renders the admin dashboard.",
+    summary="Admin Config",
+    description="Returns configuration needed for the admin dashboard.",
 )
-async def admin_dashboard(
+async def admin_config(
     request: Request,
     admin_session: str = Cookie(None, description="Admin session token"),
 ):
-    try:
-        require_admin_auth(admin_session)
-        return templates.TemplateResponse(
-            "admin_dashboard.html",
-            {
-                "request": request,
-                "version_info": UpdateManager.get_version_info(),
-                "background_scraper_interval": max(
-                    1, settings.BACKGROUND_SCRAPER_INTERVAL
-                ),
-            },
-        )
-    except HTTPException:
-        return RedirectResponse("/admin", status_code=303)
+    require_admin_auth(admin_session)
+    return JSONResponse(
+        {
+            "success": True,
+            "background_scraper_interval": max(
+                1, settings.BACKGROUND_SCRAPER_INTERVAL
+            ),
+        }
+    )
 
 
 @router.post(
-    "/admin/logout",
+    "/admin/api/logout",
     tags=["Admin"],
     summary="Admin Logout",
     description="Logs out the admin user.",
 )
 async def admin_logout():
-    response = RedirectResponse("/admin", status_code=303)
+    response = JSONResponse({"success": True})
     response.delete_cookie(ADMIN_SESSION_COOKIE)
     return response
-
 
 @router.get(
     "/admin/api/connections",

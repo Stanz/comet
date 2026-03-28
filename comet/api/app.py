@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 import aiohttp
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -226,8 +227,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory="comet/templates"), name="static")
-
 app.include_router(base.router)
 app.include_router(config.router)
 app.include_router(admin.router)
@@ -248,3 +247,27 @@ stremio_routers = (
 
 for stremio_router in stremio_routers:
     app.include_router(stremio_router, prefix=STREMIO_API_PREFIX)
+
+import os
+
+@app.get("/{full_path:path}", include_in_schema=False)
+async def serve_spa(full_path: str):
+    # Potential base directories for the SPA build
+    base_dirs = [
+        "frontend/.output/public",
+        "comet/templates"
+    ]
+    
+    # Check if the requested file exists in any of the base directories
+    if full_path:
+        for base_dir in base_dirs:
+            file_path = os.path.join(base_dir, full_path)
+            if os.path.exists(file_path) and os.path.isfile(file_path):
+                return FileResponse(file_path)
+            
+    # Fallback to _shell.html
+    for base_dir in base_dirs:
+        index_path = os.path.join(base_dir, "_shell.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+

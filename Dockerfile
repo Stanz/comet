@@ -1,3 +1,19 @@
+# Stage 1: Build Frontend
+FROM node:25-alpine AS frontend-builder
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+WORKDIR /app/frontend
+
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+COPY frontend/ ./
+RUN pnpm build
+
+# Stage 2: Runtime
 FROM ghcr.io/astral-sh/uv:python3.13-alpine
 LABEL name="Comet" \
       description="Stremio's fastest torrent/debrid search add-on." \
@@ -26,5 +42,8 @@ ARG COMET_BRANCH
 ENV COMET_COMMIT_HASH=${COMET_COMMIT_HASH} \
     COMET_BUILD_DATE=${COMET_BUILD_DATE} \
     COMET_BRANCH=${COMET_BRANCH}
+
+# Copy frontend build output
+COPY --from=frontend-builder /app/frontend/.output /app/frontend/.output
 
 ENTRYPOINT ["uv", "run", "python", "-m", "comet.main"]
