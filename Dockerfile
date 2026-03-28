@@ -1,13 +1,13 @@
 # Stage 1: Build Frontend
-FROM node:25-alpine AS frontend-builder
+FROM node:25 AS frontend-builder
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
 
 WORKDIR /app/frontend
 
 COPY frontend/package.json frontend/pnpm-lock.yaml ./
+RUN wget -qO- https://get.pnpm.io/install.sh | ENV="$HOME/.bashrc" SHELL="$(which bash)" bash -
 RUN pnpm install --frozen-lockfile
 
 COPY frontend/ ./
