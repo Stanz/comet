@@ -3,13 +3,16 @@ name: Frontend CI
 on:
   push:
     branches: [main]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-ci.yml"
+      - "!**.md"
   pull_request:
     branches: [main]
     paths:
       - "frontend/**"
       - ".github/workflows/frontend-ci.yml"
-    paths-ignore:
-      - "**/*.md"
+      - "!**.md"
 
 jobs:
   lint-and-fmt:
