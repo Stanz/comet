@@ -7,6 +7,7 @@ import { SupportComet } from "../components/ui/SupportComet";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 import { FormDevtoolsPanel } from "@tanstack/react-form-devtools";
+import { SettingsProvider, useSettings } from "../hooks/useSettings.tsx";
 
 const queryClient = new QueryClient();
 
@@ -35,18 +36,28 @@ export const Route = createRootRoute({
       },
     ],
   }),
-  shellComponent: RootDocument,
+  shellComponent: RootShell,
 });
 
+function RootShell({ children }: { children: React.ReactNode }) {
+  return (
+    <SettingsProvider>
+      <RootDocument>{children}</RootDocument>
+    </SettingsProvider>
+  );
+}
+
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const { showStars } = useSettings();
+
   return (
     <html lang="en">
       <head>
         <HeadContent />
       </head>
-      <body className="flex flex-col justify-center items-center min-h-screen m-0 bg-[radial-gradient(ellipse_at_bottom,#25292c_0%,#0c0d13_100%)] font-sans text-white [overflow-wrap:anywhere]">
+      <body className="flex flex-col justify-center items-center min-h-screen m-0 font-sans text-white [overflow-wrap:anywhere]">
         <QueryClientProvider client={queryClient}>
-          <Stars />
+          {showStars && <Stars />}
           <SupportComet />
 
           <div className="root">{children}</div>

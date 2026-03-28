@@ -115,12 +115,19 @@ async def admin_config(
     admin_session: str = Cookie(None, description="Admin session token"),
 ):
     require_admin_auth(admin_session)
+    current_info = UpdateManager.get_version_info()
     return JSONResponse(
         {
             "success": True,
             "background_scraper_interval": max(
                 1, settings.BACKGROUND_SCRAPER_INTERVAL
             ),
+            "cometnet_enabled": settings.COMETNET_ENABLED,
+            "version_info": {
+                "branch": current_info.branch,
+                "commit_hash": current_info.commit_hash,
+                "build_date": current_info.build_date,
+            },
         }
     )
 

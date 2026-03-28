@@ -8,7 +8,7 @@ export function ConfigView({ config }: { config: AdminConfig }) {
         <Settings className="w-5 h-5 text-indigo-400" />
         Live Configuration
       </h2>
-      <div className="bg-black/30 rounded-xl border border-white/5 p-6 overflow-auto max-h-[500px] scrollbar-hide">
+      <div className="bg-gray-100/50 dark:bg-black/30 rounded-xl border border-gray-200 dark:border-white/5 p-6 overflow-auto max-h-[500px] scrollbar-hide">
         <pre className="text-xs text-emerald-400/80 font-mono leading-relaxed">
           {JSON.stringify(config, null, 2)}
         </pre>
