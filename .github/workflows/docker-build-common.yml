@@ -32,7 +32,7 @@ permissions:
   packages: write
 
 env:
-  IMAGE_NAME: g0ldyy/comet
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push:
@@ -72,8 +72,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
           build-args: |
             COMET_COMMIT_HASH=${{ github.sha }}
             COMET_BUILD_DATE=${{ steps.date.outputs.date }}
