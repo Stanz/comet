@@ -51,16 +51,16 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const { showStars } = useSettings();
 
   return (
-    <html lang="en">
+    <html lang="en" className="scrollbar-gutter-stable">
       <head>
         <HeadContent />
       </head>
-      <body className="flex flex-col justify-center items-center min-h-screen m-0 font-sans text-white [overflow-wrap:anywhere]">
+      <body className="flex flex-col items-center min-h-screen m-0 font-sans text-white [overflow-wrap:anywhere]">
         <QueryClientProvider client={queryClient}>
           {showStars && <Stars />}
           <SupportComet />
 
-          <div className="root">{children}</div>
+          <div className="root w-full overflow-x-hidden">{children}</div>
           <TanStackDevtools
             config={{
               position: "bottom-right",

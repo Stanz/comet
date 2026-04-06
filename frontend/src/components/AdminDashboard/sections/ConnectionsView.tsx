@@ -64,11 +64,10 @@ export function ConnectionsView() {
             <tbody className="divide-y divide-white/5">
               {connections.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="py-20 text-center text-gray-500 italic border border-gray-100 dark:border-white/5 bg-black/20 rounded-lg mt-4 inline-block w-full"
-                  >
-                    No active connections
+                  <td colSpan={5}>
+                    <div className="py-20 text-center text-gray-500 italic border border-gray-100 dark:border-white/5 bg-black/20 rounded-lg mt-4 w-full">
+                      No active connections
+                    </div>
                   </td>
                 </tr>
               ) : (

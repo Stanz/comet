@@ -913,6 +913,20 @@ async def _migration_series_episode_index_refresh(ctx: MigrationContext):
     return True
 
 
+
+async def _migration_admin_settings_overrides(ctx: MigrationContext):
+    await ctx.database.execute(
+        """
+        CREATE TABLE IF NOT EXISTS admin_settings_overrides (
+            key TEXT PRIMARY KEY,
+            value_json TEXT NOT NULL,
+            updated_at REAL NOT NULL
+        )
+        """
+    )
+    return True
+
+
 MIGRATIONS = [
     ("2026030901_foundation", _migration_foundation),
     ("2026030902_backfill_canonical_tables", _migration_backfill_canonical_tables),
@@ -925,4 +939,5 @@ MIGRATIONS = [
         "2026031602_series_episode_index_refresh",
         _migration_series_episode_index_refresh,
     ),
+    ("2026032801_admin_settings_overrides", _migration_admin_settings_overrides),
 ]

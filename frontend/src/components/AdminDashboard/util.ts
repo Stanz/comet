@@ -1,7 +1,16 @@
 import { queryOptions } from "@tanstack/react-query";
 
 import * as v from "valibot";
-import { validatedGet } from "../../util/api";
+import { validatedGet, validatedPatch, validatedDelete } from "../../util/api";
+import { HTTPError } from "ky";
+
+async function extractApiError(e: unknown): Promise<never> {
+  if (e instanceof HTTPError && e.response) {
+    const body = await e.response.json().catch(() => ({}));
+    throw new Error((body as { detail?: string }).detail ?? `HTTP ${e.response.status}`);
+  }
+  throw e;
+}
 
 export const AdminConnectionSchema = v.object({
   id: v.string(),
@@ -335,3 +344,77 @@ export const adminCometNetPoolsQueryOptions = () =>
     queryFn: () => validatedGet("/admin/api/cometnet/pools", CometNetPoolsResponseSchema),
     refetchInterval: 10000,
   });
+
+// ---------------------------------------------------------------------------
+// Admin Settings
+// ---------------------------------------------------------------------------
+
+export const SettingItemSchema = v.object({
+  key: v.string(),
+  value: v.nullable(v.unknown()),
+  default: v.nullable(v.unknown()),
+  source: v.picklist(["env", "override", "default"]),
+  type: v.picklist(["string", "int", "float", "bool", "list"]),
+  group: v.string(),
+  editable: v.boolean(),
+  sensitive: v.boolean(),
+  restart_required: v.boolean(),
+  description: v.nullable(v.string()),
+});
+export type SettingItem = v.InferOutput<typeof SettingItemSchema>;
+
+export const AdminSettingsResponseSchema = v.object({
+  settings: v.array(SettingItemSchema),
+  groups: v.array(v.string()),
+});
+export type AdminSettingsResponse = v.InferOutput<typeof AdminSettingsResponseSchema>;
+
+export const adminSettingsQueryOptions = () =>
+  queryOptions({
+    queryKey: ["admin", "settings"],
+    queryFn: () => validatedGet("/admin/api/settings", AdminSettingsResponseSchema),
+    staleTime: 30000,
+  });
+
+export const PatchSettingSchema = v.object({
+  success: v.boolean(),
+  key: v.string(),
+  value: v.unknown(),
+  source: v.string(),
+});
+
+export async function patchAdminSetting(key: string, value: unknown): Promise<void> {
+  try {
+    await validatedPatch("/admin/api/settings", PatchSettingSchema, {
+      json: { key, value },
+    });
+  } catch (e) {
+    await extractApiError(e);
+  }
+}
+
+export const DeleteSettingSchema = v.object({
+  success: v.boolean(),
+  key: v.string(),
+});
+
+export async function deleteAdminSetting(key: string): Promise<void> {
+  try {
+    await validatedDelete(`/admin/api/settings/${encodeURIComponent(key)}`, DeleteSettingSchema);
+  } catch (e) {
+    await extractApiError(e);
+  }
+}
+
+export const ResetAllSettingsSchema = v.object({
+  success: v.boolean(),
+  reset_count: v.number(),
+});
+
+export async function resetAllAdminSettings(): Promise<void> {
+  try {
+    await validatedDelete("/admin/api/settings", ResetAllSettingsSchema);
+  } catch (e) {
+    await extractApiError(e);
+  }
+}

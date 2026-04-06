@@ -92,6 +92,10 @@ body,
   min-height: 100%;
 }
 
+.scrollbar-gutter-stable {
+  scrollbar-gutter: stable;
+}
+
 body {
   position: relative;
   margin: 0;

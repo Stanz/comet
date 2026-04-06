@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
-from comet.api.endpoints import (admin, base, chilllink, cometnet, cometnet_ui,
+from comet.api.endpoints import (admin, admin_settings, base, chilllink, cometnet, cometnet_ui,
                                  config, debrid_sync, kodi, manifest, playback)
 from comet.api.endpoints import stream as streams_router
 from comet.background_scraper.worker import background_scraper
@@ -60,6 +60,7 @@ async def lifespan(app: FastAPI):
     await setup_database()
     setup_executor()
     await http_client_manager.init()
+    await admin_settings.load_and_apply_db_overrides()
 
     if settings.DOWNLOAD_GENERIC_TRACKERS:
         await download_best_trackers()
@@ -230,6 +231,7 @@ app.add_middleware(
 app.include_router(base.router)
 app.include_router(config.router)
 app.include_router(admin.router)
+app.include_router(admin_settings.router)
 app.include_router(cometnet.router)
 app.include_router(cometnet_ui.router)
 app.include_router(kodi.router)

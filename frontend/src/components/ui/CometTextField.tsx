@@ -14,14 +14,18 @@ export const CometTextField = ({
   type = "text",
   className,
   inputClassName = "",
+  size = "md",
 }: BaseFieldProps & {
   value: string;
   onChange: (val: string) => void;
   placeholder?: string;
   type?: string;
   inputClassName?: string;
+  size?: "md" | "sm";
 }) => {
   const id = providedId ?? useId();
+  const sizeClass =
+    size === "sm" ? "px-2.5 py-1.5 rounded-lg text-sm" : "px-4 py-2.5 rounded-xl text-sm";
 
   return (
     <FieldWrapper
@@ -38,7 +42,7 @@ export const CometTextField = ({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm focus:outline-none focus:border-indigo-500/50 transition-all placeholder:text-gray-600 ${inputClassName}`}
+        className={`w-full bg-white/5 border border-white/10 ${sizeClass} focus:outline-none focus:border-indigo-500/50 transition-all placeholder:text-gray-600 ${inputClassName}`}
       />
     </FieldWrapper>
   );

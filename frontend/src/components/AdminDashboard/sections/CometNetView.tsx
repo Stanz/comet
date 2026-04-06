@@ -1,25 +1,46 @@
-import { Share2, Globe, Shield, Wifi, Users } from "lucide-react";
+import { Suspense } from "react";
+import { Share2, Globe, Shield, Wifi, WifiOff, Users } from "lucide-react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   adminCometNetStatsQueryOptions,
   adminCometNetPeersQueryOptions,
   adminCometNetPoolsQueryOptions,
+  adminConfigQueryOptions,
 } from "../util";
 import { StatCard } from "../StatCard";
+import { CometNetSkeleton } from "./CometNetSkeleton";
 
-export function CometNetView() {
+function CometNetDisabled() {
+  return (
+    <div className="p-8 flex flex-col items-center justify-center text-center h-full min-h-[400px]">
+      <WifiOff className="w-12 h-12 text-gray-500 mb-4" />
+      <h2 className="text-xl font-bold text-gray-200 mb-2">CometNet Not Available</h2>
+      <p className="text-gray-400 max-w-md">
+        CometNet is not enabled on this node. Enable it via the{" "}
+        <code className="text-indigo-400 bg-indigo-500/10 px-1 rounded">COMETNET_ENABLED</code>{" "}
+        environment variable.
+      </p>
+    </div>
+  );
+}
+
+function CometNetInactive() {
+  return (
+    <div className="p-6 flex flex-col items-center justify-center min-h-[400px] text-gray-500 gap-4">
+      <Share2 className="w-12 h-12 opacity-20" />
+      <h2 className="text-xl font-bold">CometNet Disabled</h2>
+      <p className="text-sm">Enable CometNet in Settings to join the P2P network.</p>
+    </div>
+  );
+}
+
+function CometNetContent() {
   const { data: stats } = useSuspenseQuery(adminCometNetStatsQueryOptions());
   const { data: peersData } = useSuspenseQuery(adminCometNetPeersQueryOptions());
   const { data: poolsData } = useSuspenseQuery(adminCometNetPoolsQueryOptions());
 
   if (!stats.enabled) {
-    return (
-      <div className="p-6 flex flex-col items-center justify-center min-h-[400px] text-gray-500 gap-4">
-        <Share2 className="w-12 h-12 opacity-20" />
-        <h2 className="text-xl font-bold">CometNet Disabled</h2>
-        <p className="text-sm">Enable CometNet in Settings to join the P2P network.</p>
-      </div>
-    );
+    return <CometNetInactive />;
   }
 
   // Type assertion since we used v.record(v.string(), v.unknown())
@@ -164,5 +185,19 @@ export function CometNetView() {
         </div>
       </div>
     </div>
+  );
+}
+
+export function CometNetView() {
+  const { data: config } = useSuspenseQuery(adminConfigQueryOptions());
+
+  if (!config.cometnet_enabled) {
+    return <CometNetDisabled />;
+  }
+
+  return (
+    <Suspense fallback={<CometNetSkeleton />}>
+      <CometNetContent />
+    </Suspense>
   );
 }

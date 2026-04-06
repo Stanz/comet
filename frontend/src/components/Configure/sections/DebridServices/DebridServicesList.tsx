@@ -34,7 +34,9 @@ export const DebridServicesList = withCometForm({
 
           form.getFieldValue("debridServices"); // read to ensure subscribed
           // Use the API directly on the underlying array field
-          const current = (form as unknown as { getFieldValue: (n: string) => unknown }).getFieldValue("debridServices");
+          const current = (
+            form as unknown as { getFieldValue: (n: string) => unknown }
+          ).getFieldValue("debridServices");
           if (!Array.isArray(current)) return;
 
           // We trigger reorder via the form's field API

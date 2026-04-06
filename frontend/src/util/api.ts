@@ -28,8 +28,6 @@ export async function validatedGet<T>(
   if (result.success) {
     return result.output;
   }
-  console.log(result.issues.map((issue) => issue.path));
-  console.error(result.issues);
   throw result.issues[0].message;
 }
 
@@ -42,5 +40,29 @@ export async function validatedPost<T>(
   options?: Parameters<typeof apiClient.post>[1],
 ): Promise<T> {
   const json = await apiClient.post(url, options).json();
+  return v.parse(schema, json);
+}
+
+/**
+ * Performs a PATCH request and validates the JSON response against a Valibot schema.
+ */
+export async function validatedPatch<T>(
+  url: string,
+  schema: v.GenericSchema<any, T>,
+  options?: Parameters<typeof apiClient.patch>[1],
+): Promise<T> {
+  const json = await apiClient.patch(url, options).json();
+  return v.parse(schema, json);
+}
+
+/**
+ * Performs a DELETE request and validates the JSON response against a Valibot schema.
+ */
+export async function validatedDelete<T>(
+  url: string,
+  schema: v.GenericSchema<any, T>,
+  options?: Parameters<typeof apiClient.delete>[1],
+): Promise<T> {
+  const json = await apiClient.delete(url, options).json();
   return v.parse(schema, json);
 }
