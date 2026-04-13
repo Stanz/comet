@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
 interface Star {
   id: number;
@@ -8,7 +8,7 @@ interface Star {
   fallDuration: string;
 }
 
-const createStars = (starCount = 30): Star[] => {
+const createStars = (density: number): Star[] => {
   let hasTouchScreen = false;
   const nav = navigator;
   if ("maxTouchPoints" in nav) {
@@ -21,17 +21,18 @@ const createStars = (starCount = 30): Star[] => {
   }
 
   if (!hasTouchScreen) {
+    const starCount = Math.max(25, Math.round((window.innerWidth / 55) * density));
     const newStars = [];
     for (let i = 0; i < starCount; i++) {
-      const randomTopOffset = Math.random() * 100;
-      const randomLeftOffset = 80 + Math.random() * 40;
+      const randomLeftOffset = 80 + Math.random() * 60;
+      const randomTopOffset = -20 + Math.random() * 140;
       const randomTailLength = 5 + Math.random() * 2.5;
       const randomFallDuration = 6 + Math.random() * 6;
 
       newStars.push({
         id: i,
         topOffset: `${randomTopOffset}vh`,
-        leftOffset: `${randomLeftOffset}em`,
+        leftOffset: `${randomLeftOffset}vw`,
         tailLength: `${randomTailLength}em`,
         fallDuration: `${randomFallDuration}s`,
       });
@@ -41,12 +42,17 @@ const createStars = (starCount = 30): Star[] => {
   return [];
 };
 
-export default function Stars() {
+interface StarsProps {
+  /** Multiplier for the auto-calculated star count. Default 1. Use < 1 for sparser, > 1 for denser. */
+  density?: number;
+}
+
+export default function Stars({ density = 1 }: StarsProps) {
   const [stars, setStars] = useState<Star[]>([]);
 
-  useLayoutEffect(() => {
-    setStars(createStars(30));
-  }, []);
+  useEffect(() => {
+    setStars(createStars(density));
+  }, [density]);
 
   if (stars.length === 0) return null;
 
@@ -61,9 +67,9 @@ export default function Stars() {
               top: star.topOffset,
               width: star.tailLength,
               height: "2px",
-              transform: `translate3d(${star.leftOffset}, 0, 0)`,
+              translate: `${star.leftOffset} 0`,
+              transformOrigin: "left center",
               animation: `fall ${star.fallDuration} 0s linear infinite, tail-fade ${star.fallDuration} 0s ease-out infinite`,
-              filter: "drop-shadow(0 0 6px currentColor)",
               "--star-width": `calc(${star.tailLength} / 6)`,
               "--star-tail": star.tailLength,
             } as CSSProperties

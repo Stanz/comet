@@ -173,7 +173,6 @@ body::after {
   height: 100%;
   background: linear-gradient(45deg, transparent, currentColor, transparent);
   border-radius: inherit;
-  animation: blink 2s linear infinite;
 }
 .star::before {
   transform: rotate(45deg);
@@ -183,27 +182,34 @@ body::after {
 }
 @keyframes fall {
   to {
-    transform: translate3d(-30em, 0, 0);
+    translate: -30em 0;
   }
 }
 @keyframes tail-fade {
   0%,
   50% {
-    width: var(--star-tail);
+    scale: 1 1;
     opacity: 1;
   }
   70%,
   80% {
-    width: 0;
+    scale: 0 1;
     opacity: 0.4;
   }
   100% {
-    width: 0;
+    scale: 0 1;
     opacity: 0;
   }
 }
-@keyframes blink {
-  50% {
-    opacity: 0.6;
+
+@media (prefers-reduced-motion: no-preference) {
+  .star {
+    will-change: translate, scale, opacity;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star {
+    animation: none !important;
   }
 }
